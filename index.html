@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投资者风险评价系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .option-button {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .option-button:hover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f8faff 0%, #e8f2ff 100%);
+        }
+        .option-button.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        .radar-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+        .section-divider {
+            background: linear-gradient(90deg, transparent 0%, #667eea 50%, transparent 100%);
+            height: 2px;
+            margin: 30px 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 头部 -->
+    <header class="gradient-bg text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl font-bold mb-2">投资者风险评价系统</h1>
+            <p class="text-xl opacity-90">科学评估您的投资风险偏好，制定个性化投资策略</p>
+        </div>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 问卷部分 -->
+        <div id="questionnaire" class="max-w-4xl mx-auto">
+            <!-- 进度条 -->
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-sm font-medium text-gray-600">答题进度</span>
+                    <span class="text-sm font-medium text-gray-600" id="progress-text">1/20</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="progress-bar h-3 rounded-full transition-all duration-500" id="progress-bar" style="width: 5%"></div>
+                </div>
+            </div>
+
+            <!-- 问题卡片 -->
+            <div class="bg-white rounded-lg shadow-lg p-8 card-hover" id="question-card">
+                <div class="mb-6">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 gradient-bg rounded-full flex items-center justify-center text-white mr-4">
+                            <i class="fas fa-chart-line text-xl" id="question-icon"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800" id="question-title">问题标题</h2>
+                            <p class="text-gray-600" id="question-category">风险承受能力</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 选项 -->
+                <div class="space-y-4" id="options-container">
+                    <!-- 选项将通过JavaScript动态生成 -->
+                </div>
+
+                <!-- 导航按钮 -->
+                <div class="flex justify-between items-center mt-8">
+                    <button id="prev-btn" class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-arrow-left mr-2"></i>上一题
+                    </button>
+                    <button id="next-btn" class="px-6 py-3 gradient-bg text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                        下一题<i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 结果页面 -->
+        <div id="results" class="max-w-6xl mx-auto hidden">
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h2 class="text-3xl font-bold text-center mb-8 text-gray-800">您的风险评价报告</h2>
+                
+                <!-- 总体评分 -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                        <h3 class="text-xl font-bold mb-2 text-blue-800">风险承受能力</h3>
+                        <div class="text-4xl font-bold text-blue-600" id="ability-score">0</div>
+                        <div class="text-sm text-blue-600" id="ability-level">等级</div>
+                    </div>
+                    <div class="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                        <h3 class="text-xl font-bold mb-2 text-purple-800">风险承受态度</h3>
+                        <div class="text-4xl font-bold text-purple-600" id="attitude-score">0</div>
+                        <div class="text-sm text-purple-600" id="attitude-level">等级</div>
+                    </div>
+                    <div class="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                        <h3 class="text-xl font-bold mb-2 text-green-800">综合评价</h3>
+                        <div class="text-4xl font-bold text-green-600" id="total-score">0</div>
+                        <div class="text-sm text-green-600" id="total-level">投资者类型</div>
+                    </div>
+                </div>
+
+                <!-- 雷达图 -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-xl font-bold mb-4 text-center text-gray-800">风险承受能力分析</h3>
+                        <div class="radar-container">
+                            <canvas id="abilityRadar"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-xl font-bold mb-4 text-center text-gray-800">风险承受态度分析</h3>
+                        <div class="radar-container">
+                            <canvas id="attitudeRadar"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 详细评价 -->
+                <div class="bg-gray-50 rounded-lg p-6 mb-8">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">详细评价与建议</h3>
+                    <div id="detailed-evaluation" class="space-y-4">
+                        <!-- 详细评价内容将通过JavaScript生成 -->
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="flex justify-center space-x-4">
+                    <button id="download-btn" class="px-8 py-3 gradient-bg text-white rounded-lg hover:opacity-90 transition-opacity">
+                        <i class="fas fa-download mr-2"></i>下载评价报告
+                    </button>
+                    <button id="restart-btn" class="px-8 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
+                        <i class="fas fa-redo mr-2"></i>重新测评
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2024 投资者风险评价系统. 仅供参考，投资有风险，决策需谨慎。</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        // 调试代码
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面DOM加载完成');
+            
+            setTimeout(() => {
+                console.log('检查questionnaire对象:', typeof questionnaire);
+                console.log('检查init函数:', typeof init);
+                console.log('检查allQuestions:', typeof allQuestions);
+                
+                if (typeof questionnaire !== 'undefined') {
+                    console.log('questionnaire.ability长度:', questionnaire.ability.length);
+                    console.log('questionnaire.attitude长度:', questionnaire.attitude.length);
+                }
+                
+                // 检查关键DOM元素
+                const elements = ['question-title', 'question-category', 'question-icon', 'options-container'];
+                elements.forEach(id => {
+                    const element = document.getElementById(id);
+                    console.log(`元素 ${id}:`, element ? '存在' : '不存在');
+                });
+                
+                if (typeof init === 'function') {
+                    console.log('尝试调用init函数...');
+                    try {
+                        init();
+                        console.log('init函数调用成功');
+                        console.log('allQuestions长度:', allQuestions ? allQuestions.length : '未定义');
+                    } catch (error) {
+                        console.error('init函数调用失败:', error);
+                    }
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>
